@@ -1,10 +1,19 @@
 
+export interface ReportFigureModel {
+    confirmed: number
+    reportDate: string
+    confirmedCasesGrowthRatePerMinute: number | null
+    previousFigures: {
+        confirmed: number
+        reportDate: string
+    }[]
+}
+
 export interface EpidemicResponseModel {
-    confirmedCases: number
-    confirmedCasesReportDate: Date
-    confirmedCasesGrowthRatePerMinute: number
-    confirmedDeaths: number
-    confirmedDeathsReportDate: Date
+    cases: ReportFigureModel
+    deaths: ReportFigureModel
+    recoveries: ReportFigureModel
+    recoveriesShouldEstimate: boolean
     country: {
         countryCode: string
         population: number
@@ -16,7 +25,4 @@ export interface EpidemicResponseModel {
         rNaughtValue: number
         diseaseLengthEstimateInMins: number
     },
-    recoveredCases: number
-    recoveredCasesReportDate: Date
-    recoveredCasesShouldEstimate: boolean
 }

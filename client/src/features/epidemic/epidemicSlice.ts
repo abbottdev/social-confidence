@@ -1,14 +1,26 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AppThunk, RootState } from '../../app/store';
-import { EpidemicResponseModel } from '../../types/api/EpidemicResponseModel';
+import { EpidemicResponseModel, ReportFigureModel } from '../../types/api/EpidemicResponseModel';
 
 interface EpidemicState {
     calculatedFigures?: {
-        currentCases: number
-        currentDeaths: number
+        cases: {
+            confirmed: number,
+            estimated: number,
+            change?: number
+        }
+        deaths: {
+            confirmed: number,
+            estimated: number,
+            change?: number
+        },
+        recovered: {
+            confirmed: number,
+            estimated: number,
+            change?: number
+        }
         currentPopulation: number
         diseaseName: string
-        recoveredCases: number
         asOfDateEpoch: number
     },
     isLoading: boolean;
@@ -21,18 +33,20 @@ const initialState: EpidemicState = {
 };
 
 const calculateConfirmedCases = (data: EpidemicResponseModel): number => {
-    const { confirmedCases, confirmedCasesGrowthRatePerMinute, confirmedCasesReportDate } = data;
+    const { confirmed, confirmedCasesGrowthRatePerMinute, reportDate } = data.cases;
     
-    const numberOfMinutesSinceReportDate = (new Date().valueOf() / 1000 / 60) - (new Date(confirmedCasesReportDate).valueOf() / 1000 / 60);
+    const numberOfMinutesSinceReportDate = (new Date().valueOf() / 1000 / 60) - (new Date(reportDate).valueOf() / 1000 / 60);
 
     console.log(`numberOfMinutesSinceReportDate: ${numberOfMinutesSinceReportDate}, growthRate: ${confirmedCasesGrowthRatePerMinute}`);
-    return confirmedCases + (numberOfMinutesSinceReportDate * confirmedCasesGrowthRatePerMinute);
+
+    if (confirmedCasesGrowthRatePerMinute)
+        return confirmed + (numberOfMinutesSinceReportDate * confirmedCasesGrowthRatePerMinute);
+    else
+        return confirmed;
 };
 
 const calculateConfirmedDeaths = (data: EpidemicResponseModel): number => {
-    const { confirmedDeaths } = data;
-    
-    return confirmedDeaths;
+    return data.deaths.confirmed;
 };
 
 const calculateCurrentPopulation = (data: EpidemicResponseModel): number => {
@@ -42,24 +56,47 @@ const calculateCurrentPopulation = (data: EpidemicResponseModel): number => {
 };
 
 const calculateRecoveredCases = (data: EpidemicResponseModel, calculatedConfirmedCases: number): number => {
-    const { recoveredCases, recoveredCasesShouldEstimate } = data;
+    const { confirmed } = data.recoveries;
     
-    if (recoveredCasesShouldEstimate) {
+    if (data.recoveriesShouldEstimate) {
         //Assume disease length
         const diseaseLengthInMins = data.disease.diseaseLengthEstimateInMins ?? 7 * 24 * 60;
 
         //If the report is 2 days old, we know the number of confirmed cases and confirmed deaths
         //If we project the number of deaths, subtracting already known deaths.
-        const confirmedCasesAsOfTwoWeeksAgo = calculatedConfirmedCases - (data.confirmedCasesGrowthRatePerMinute * diseaseLengthInMins);
+        const confirmedCasesAsOfTwoWeeksAgo = calculatedConfirmedCases - (diseaseLengthInMins / data.cases.confirmedCasesGrowthRatePerMinute!);
 
-        const projectedDeathsToDate = (confirmedCasesAsOfTwoWeeksAgo * 3.67) - data.confirmedDeaths; //https://www.thelancet.com/journals/laninf/article/PIIS1473-3099(20)30243-7/fulltext
+        const projectedDeathsToDate = (confirmedCasesAsOfTwoWeeksAgo * 0.0367) + data.deaths.confirmed; //https://www.thelancet.com/journals/laninf/article/PIIS1473-3099(20)30243-7/fulltext
         
-        return calculatedConfirmedCases - projectedDeathsToDate;
+        return confirmedCasesAsOfTwoWeeksAgo - projectedDeathsToDate;
     } else {
-        return recoveredCases;
+        return confirmed;
     }
 };
 
+const calculateChange = (figures:ReportFigureModel): number | undefined => {
+    const lastReportedFigure = getLastReportedFigure(figures);
+
+    if (lastReportedFigure)
+        return figures.confirmed - lastReportedFigure;
+    else
+        return undefined;
+}
+
+const getLastReportedFigure = (figures:ReportFigureModel): number | undefined => {
+    if (figures.previousFigures == null || figures.previousFigures.length == 0)
+        return undefined;
+    const initialDate = new Date(figures.reportDate);
+
+    let sortedFigures = figures.previousFigures.sort((a, b) => new Date(a.reportDate).valueOf() - new Date(b.reportDate).valueOf());
+
+    sortedFigures = sortedFigures.filter(figure => new Date(figure.reportDate) < initialDate);
+    
+    if (sortedFigures.length)
+        return sortedFigures[0].confirmed;
+    else
+        return undefined;
+};
 
 export const slice = createSlice({
   name: 'epidemic',
@@ -76,11 +113,23 @@ export const slice = createSlice({
 
       state.calculatedFigures = {
         ...state.calculatedFigures,
-        currentCases: calculatedConfirmedCases,
-        currentDeaths: calculateConfirmedDeaths(state.data!),
+        cases: {
+            confirmed: state.data!.cases.confirmed,
+            estimated: calculatedConfirmedCases,
+            change: calculateChange(state.data!.cases)
+        },
+        deaths: {
+            confirmed: state.data!.deaths.confirmed,
+            estimated: calculateConfirmedDeaths(state.data!),
+            change: calculateChange(state.data!.cases)
+        },
+        recovered: {
+            confirmed: state.data?.recoveries.confirmed!,
+            estimated: calculateRecoveredCases(state.data!, calculatedConfirmedCases),
+            change: calculateChange(state.data!.cases)
+        },
         currentPopulation: calculateCurrentPopulation(state.data!),
         diseaseName: state.data!.disease.name,
-        recoveredCases: calculateRecoveredCases(state.data!, calculatedConfirmedCases),
         asOfDateEpoch: new Date().valueOf(),
       };
 
@@ -104,11 +153,20 @@ export const slice = createSlice({
 
       //Calculate current cases
       state.calculatedFigures = {
-        currentCases: calculatedConfirmedCases,
-        currentDeaths: calculateConfirmedDeaths(state.data!),
+        cases: {
+            confirmed: state.data!.cases.confirmed,
+            estimated: calculatedConfirmedCases
+        },
+        deaths: {
+            confirmed: state.data!.deaths.confirmed,
+            estimated: calculateConfirmedDeaths(state.data!)
+        },
+        recovered: {
+            confirmed: state.data?.recoveries.confirmed!,
+            estimated: calculateRecoveredCases(state.data!, calculatedConfirmedCases)
+        },
         currentPopulation: calculateCurrentPopulation(state.data!),
         diseaseName: state.data!.disease.name,
-        recoveredCases: calculateRecoveredCases(state.data!, calculatedConfirmedCases),
         asOfDateEpoch: new Date().valueOf()
       };
 
@@ -124,7 +182,7 @@ export const queueUpdate = (): AppThunk => dispatch => {
 
   interval = setInterval(() => {
     dispatch(tickCalculatedFigures(interval));
-  }, 100);
+  }, 500);
 };
 
 // The function below is called a thunk and allows us to perform async logic. It
@@ -133,15 +191,19 @@ export const queueUpdate = (): AppThunk => dispatch => {
 // code can then be executed and other actions can be dispatched
 export const loadEpidemicAsync = (countryCode: string, disease: string): AppThunk => async dispatch => {
     dispatch(slice.actions.isLoadingFromServer());
-    setTimeout(async () => {
-        const response= await fetch("http://social-confidence.s3-website.eu-west-2.amazonaws.com/api/countries/gb/diseases/sars-cov-2.json");
 
-        if (response.ok) {
-            const body = await response.json();
-            dispatch(slice.actions.loadEpidemicResponseFromServer(body as EpidemicResponseModel));
-            dispatch(queueUpdate());
-        }
-    }, 2000);
+    const response= await fetch("http://social-confidence.s3-website.eu-west-2.amazonaws.com/api/countries/gb/diseases/sars-cov-2-with-previous.json");
+
+    if (response.ok) {
+        const body = await response.json();
+
+        let model: EpidemicResponseModel = {
+            ...body
+        };
+
+        dispatch(slice.actions.loadEpidemicResponseFromServer(model));
+        dispatch(queueUpdate());
+    }
 };
 
 // The function below is called a selector and allows us to select a value from
@@ -154,8 +216,8 @@ export const currentEpidemic = (state:RootState) => {
     loaded: state.epidemic.isLoading === false && state.epidemic.data != null,
     disease: state.epidemic.data?.disease?.name,
     countryCode: state.epidemic?.data?.country?.countryCode,
-    officialConfirmedCases: state.epidemic?.data?.confirmedCases,
-    officialConfirmCasesDate: new Date(state.epidemic?.data?.confirmedCasesReportDate!)
+    officialConfirmedCases: state.epidemic?.data?.cases.confirmed,
+    officialConfirmCasesDate: new Date(state.epidemic?.data?.cases.reportDate!)
   } 
 }
 
