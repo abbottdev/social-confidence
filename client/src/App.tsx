@@ -1,35 +1,39 @@
-import React from 'react';
-import logo from './logo.svg';
+import React, { useEffect } from 'react';
 import './App.scss';
-import { CountrySelector } from './components/countries/CountrySelector';
-import { CountryViewer } from './components/countries/CountryViewer';
-
-import { BrowserRouter as Router, useParams, useRouteMatch, Switch, Route, Redirect } from "react-router-dom";
+import { BrowserRouter as Router, Switch, Route } from "react-router-dom";
 import { CountriesPage, HomePage } from './pages/index';
 import { DiseasePage } from './pages/DiseasePage';
 import { EpidemicPage } from './pages/EpidemicPage';
+import { Grid, Divider, Container } from '@material-ui/core';
+import { loadCountriesAsync } from './features/countries/countryListSlice';
+import { useDispatch } from 'react-redux';
+import { HeaderComponent } from './components/Header';
 
 function App() {
-  return (
-    <Router>
-      <div className="App">
-        <header className="App-header">
-          <h1>Social Confidence</h1>
-          <Switch>
-            <Route path="/countries/:countryCode?">
-              <CountrySelector />
-            </Route>
-          </Switch>
-        </header>
+  const dispatch = useDispatch();
 
-        <Switch>
-            <Route exact path="/countries/"><CountriesPage /></Route>
-            <Route exact path="/countries/:countryCode?"><CountryViewer /></Route>
-            <Route exact path="/countries/:countryCode/diseases/"><DiseasePage /></Route>
-            <Route exact path="/countries/:countryCode/diseases/:disease"><EpidemicPage /></Route>
-            <Route exact path="/"><HomePage /></Route>
-          </Switch>
-      </div>
+  useEffect(() => {
+    dispatch(loadCountriesAsync());
+  }, [dispatch]);
+
+  return (
+    <Router> 
+      <Container maxWidth="lg">
+        <Grid container spacing={3}>
+          <Grid item xs={12}>
+            <HeaderComponent />
+          </Grid>
+          <Divider />
+          <Grid item xs={12}>
+            <Switch>
+              <Route exact path="/countries/"><CountriesPage /></Route>
+              <Route exact path="/countries/:countryCode/diseases/"><DiseasePage /></Route>
+              <Route exact path="/countries/:countryCode/diseases/:disease"><EpidemicPage /></Route>
+              <Route exact path="/"><HomePage /></Route>
+            </Switch>
+        </Grid>
+        </Grid>
+      </Container>
     </Router>
   );
 }

@@ -1,7 +1,5 @@
-import React, { FunctionComponent, useState, useEffect, Props } from 'react';
-import { useParams, useHistory, Link } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux';  
-import { diseasesSelector, loadDiseasesAsync } from '../../features/diseases/diseaseSlice';
+import React, { FunctionComponent, useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { Disease } from '../../types/api/DiseaseResponseModel';
 
 export const DiseaseList:FunctionComponent<{countryCode: string}> = ({countryCode}) => {
@@ -9,8 +7,6 @@ export const DiseaseList:FunctionComponent<{countryCode: string}> = ({countryCod
     const [isLoading, setIsLoading] = useState(true);
     const [diseases, setDiseases] = useState<Disease[]>([]);
 
-    const dispatch = useDispatch();
-    const history = useHistory();
 
     useEffect(() => {
         (async () => {
@@ -27,7 +23,7 @@ export const DiseaseList:FunctionComponent<{countryCode: string}> = ({countryCod
 
             }
         })();
-    }, []);
+    }, [countryCode]);
     
     return <div>
             <h2>Diseases {isLoading && <small>Loading...</small>}</h2>         

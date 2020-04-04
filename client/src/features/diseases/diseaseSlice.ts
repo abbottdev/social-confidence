@@ -33,7 +33,7 @@ const { loadDiseases } = slice.actions;
 export const loadDiseasesAsync = (): AppThunk => async (dispatch, state) => {
     console.log("loadDiseasesAsync");
 
-    if (state().diseases.loaded == false) {
+    if (state().diseases.loaded === false) {
         console.log("loadDiseasesAsync => Loading");
     
         const diseases: Disease[] = [

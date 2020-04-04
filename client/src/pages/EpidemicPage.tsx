@@ -1,15 +1,22 @@
-import React, { FunctionComponent, useState, useEffect, Props } from 'react';
-import { useParams, useHistory } from 'react-router-dom';
-import { useSelector, useDispatch } from 'react-redux'; 
-import { diseasesSelector, loadDiseasesAsync } from "../features/diseases/diseaseSlice";
-import { DiseaseList } from '../components/diseases/DiseaseList';
+import React, { FunctionComponent } from 'react';
+import { useParams } from 'react-router-dom';
 import { EpidemicViewer } from '../components/epidemics/EpidemicViewer';
+import { Breadcrumbs, Typography } from '@material-ui/core';
+import { LinkRouter } from '../components/Routing';
+import { CountryName } from '../components/countries/CountryName';
 
 export const EpidemicPage:FunctionComponent = () => {
     const { disease, countryCode } = useParams<{countryCode: string, disease: string}>();
 
     return <div>
-        <h2>{disease}</h2>
+        
+        <Breadcrumbs aria-label="breadcrumb">
+            <LinkRouter color="inherit" to="/">Home</LinkRouter>
+            <LinkRouter color="inherit" to="/countries/">Countries</LinkRouter>
+            <LinkRouter color="inherit" to={`/countries/${countryCode}/diseases/`}><CountryName countryCode={countryCode} /></LinkRouter>
+            <Typography color="textPrimary">{disease}</Typography>
+        </Breadcrumbs>
+        
         <EpidemicViewer countryCode={countryCode} disease={disease} />
     </div>
   }

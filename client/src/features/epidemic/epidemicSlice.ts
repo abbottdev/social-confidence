@@ -30,7 +30,7 @@ const calculateConfirmedCases = (data: EpidemicResponseModel): number => {
 };
 
 const calculateConfirmedDeaths = (data: EpidemicResponseModel): number => {
-    const { confirmedDeaths, confirmedDeathsReportDate } = data;
+    const { confirmedDeaths } = data;
     
     return confirmedDeaths;
 };
@@ -42,7 +42,7 @@ const calculateCurrentPopulation = (data: EpidemicResponseModel): number => {
 };
 
 const calculateRecoveredCases = (data: EpidemicResponseModel, calculatedConfirmedCases: number): number => {
-    const { recoveredCases, recoveredCasesReportDate, recoveredCasesShouldEstimate } = data;
+    const { recoveredCases, recoveredCasesShouldEstimate } = data;
     
     if (recoveredCasesShouldEstimate) {
         //Assume disease length
@@ -132,7 +132,6 @@ export const queueUpdate = (): AppThunk => dispatch => {
 // will call the thunk with the `dispatch` function as the first argument. Async
 // code can then be executed and other actions can be dispatched
 export const loadEpidemicAsync = (countryCode: string, disease: string): AppThunk => async dispatch => {
-    let model: EpidemicResponseModel;
     dispatch(slice.actions.isLoadingFromServer());
     setTimeout(async () => {
         const response= await fetch("http://social-confidence.s3-website.eu-west-2.amazonaws.com/api/countries/gb/diseases/sars-cov-2.json");
@@ -152,7 +151,7 @@ export const currentEpidemicFigures = (state: RootState) => state.epidemic.calcu
 export const currentEpidemic = (state:RootState) => { 
   return { 
     loading: state.epidemic.isLoading,
-    loaded: state.epidemic.isLoading == false && state.epidemic.data != null,
+    loaded: state.epidemic.isLoading === false && state.epidemic.data != null,
     disease: state.epidemic.data?.disease?.name,
     countryCode: state.epidemic?.data?.country?.countryCode,
     officialConfirmedCases: state.epidemic?.data?.confirmedCases,

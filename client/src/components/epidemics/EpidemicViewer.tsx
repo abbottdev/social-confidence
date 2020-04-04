@@ -1,6 +1,7 @@
-import React, { FunctionComponent, useState, useEffect, Props } from 'react';
+import React, { FunctionComponent, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { currentEpidemicFigures, currentEpidemic, clearEpidemic, loadEpidemicAsync } from "../../features/epidemic/epidemicSlice";
+import { Card, CardContent, Grid, CircularProgress } from '@material-ui/core';
 
 export const EpidemicViewer:FunctionComponent<{countryCode: string, disease: string}> = ({countryCode, disease}) => {
     const dispatch = useDispatch();
@@ -8,16 +9,26 @@ export const EpidemicViewer:FunctionComponent<{countryCode: string, disease: str
     const figures = useSelector(currentEpidemicFigures);
     
     useEffect(() => {
-        clearEpidemic();
-        loadEpidemicAsync(countryCode, disease);
-    }, []);
+        dispatch(clearEpidemic());
+        dispatch(loadEpidemicAsync(countryCode, disease));
+    }, [countryCode, disease, dispatch]);
 
-    return <div>
-        <h2>Viewing {disease}</h2>
+    if (epidemic.loading)
+        return <CircularProgress />
+    else
+        return <Grid>
+            <Grid xs={6} md={4}>
+                <Card>
+                    <CardContent>
+                        <dl>
+                            <dd>Current</dd>
+                            <dt>{figures?.currentCases}</dt>
 
-        <dl>
-            <dd>Current</dd>
-            <dt>{figures?.currentCases}</dt>
-        </dl>
-    </div>
+                            <dd>Offical COnfirmed</dd>
+                            <dt>{epidemic.officialConfirmedCases}</dt>
+                        </dl>
+                    </CardContent>
+                </Card>
+            </Grid>
+        </Grid>;
 }
