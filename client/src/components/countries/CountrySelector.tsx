@@ -30,7 +30,7 @@ export const CountrySelector:FunctionComponent = () => {
     return <div>
             <select 
                 disabled={!loaded} value={currentCountry?.Code}
-                onChange={e => history.push(`/country/${e.currentTarget.value}`)}>
+                onChange={e => history.push(`/countries/${e.currentTarget.value}/diseases/`)}>
                 {countries.map(country =>
                     <option key={country.Code} value={country.Code} className={"flag-icon flag-icon-" + country.Code}>
                         {country.Name}
