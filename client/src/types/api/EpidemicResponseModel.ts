@@ -19,6 +19,7 @@ export interface EpidemicResponseModel {
         population: number
         populationReportDate: Date
         populationGrowthPerMinute: number
+        socialDistancingStarted: string
     },
     disease: {
         name: string

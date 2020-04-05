@@ -2,6 +2,7 @@ import React, { FunctionComponent, useEffect } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import { currentEpidemicFigures, currentEpidemic, clearEpidemic, loadEpidemicAsync } from "../../features/epidemic/epidemicSlice";
 import { Card, CardContent, Grid, CircularProgress, CardHeader, Typography } from '@material-ui/core';
+import { EpidemicDataItem } from './EpidemicDataItem';
 
 export const EpidemicViewer:FunctionComponent<{countryCode: string, disease: string}> = ({countryCode, disease}) => {
     const dispatch = useDispatch();
@@ -13,31 +14,46 @@ export const EpidemicViewer:FunctionComponent<{countryCode: string, disease: str
         dispatch(loadEpidemicAsync(countryCode, disease));
     }, [countryCode, disease, dispatch]);
 
-    if (epidemic.loading)
+    if (epidemic.loading || figures == null)
         return <CircularProgress />
-    else
+    else {
+        const { cases, currentPopulation, deaths, recovered } = figures;
+
         return <Grid container spacing={4}>
             <Grid item xs={12}>    
                 <Typography variant="body2" color="textSecondary" component="p">
-                    Last Confirmed: {figures?.cases.confirmed.toLocaleString()} cases @ {epidemic.officialConfirmCasesDate?.toLocaleDateString()}
+                    Last Confirmed: {cases.confirmed.toLocaleString()} cases @ {epidemic.officialConfirmCasesDate?.toLocaleDateString()}
+                </Typography>
+            </Grid>
+            <Grid item xs={12}>    
+                <Typography variant="h2" color="textSecondary" component="p">
+                Lives saved: {(deaths.noSocialDistancingAsOfNow - deaths.withSocialDistancingAsOfNow).toLocaleString(undefined, {minimumFractionDigits: 6})}<br />
                 </Typography>
             </Grid>
             <Grid item xs={6} md={4}>
-                <Card>
-                    <CardContent>
-                        <Typography gutterBottom variant="h5" component="h2">
-                            Cases
-                        </Typography>
-                        <Typography variant="h3" color="textPrimary" component="p">
-                          {figures?.cases.estimated?.toLocaleString(undefined, {maximumFractionDigits: 0})} <small>(est.)</small>
-                        </Typography>
-
-                        <Typography variant="h4" color={(figures?.cases.change! > 0) ? "error" : "primary"} component="p">
-                            {(figures?.cases.change! > 1) ? "+" : ""}{figures?.cases.change?.toLocaleString(undefined, {maximumFractionDigits: 0})}
-                        </Typography>
-                    </CardContent>
-                </Card>
+                <EpidemicDataItem title="Cases" {...cases} confirmedAt={epidemic.officialConfirmCasesDate} />
+                Cases Prevented to date: {(cases.noSocialDistancingAsOfNow - cases.withSocialDistancingAsOfNow).toLocaleString(undefined, {minimumFractionDigits: 6})}<br />
+                Potential Cases: {(cases.noSocialDistancingAsOfNow).toLocaleString(undefined, {minimumFractionDigits: 6})}
             </Grid>
+            <Grid item xs={6} md={4}>
+                <EpidemicDataItem title="Deaths" {...deaths} confirmedAt={epidemic.officialConfirmCasesDate} />
+                
+                Potential Deaths: {(deaths.noSocialDistancingAsOfNow).toLocaleString(undefined, {minimumFractionDigits: 6})}
+            </Grid>
+            <Grid item xs={6} md={4}>
+                <EpidemicDataItem title="Recovered" {...recovered} withSocialDistancingAsOfNow={recovered.estimatedAsOfNow} confirmedAt={epidemic.officialConfirmCasesDate} />
+            </Grid>
+            
+            <Grid item xs={6} md={4}>
+                Cases: 
+                {JSON.stringify(cases)}
+            </Grid>
+            
+            <Grid item xs={6} md={4}>
+                Deaths
+                {JSON.stringify(deaths)}
+            </Grid>
+            
             <Grid item xs={6} md={4}>
                 <Card>
                     <CardContent>
@@ -45,31 +61,7 @@ export const EpidemicViewer:FunctionComponent<{countryCode: string, disease: str
                             Population
                         </Typography>
                         <Typography variant="h3" color="textPrimary" component="p">
-                          {figures?.currentPopulation?.toLocaleString(undefined, {maximumFractionDigits: 0})} <small>(est.)</small>
-                        </Typography>
-                    </CardContent>
-                </Card>
-            </Grid>
-            <Grid item xs={6} md={4}>
-                <Card>
-                    <CardContent>
-                        <Typography gutterBottom variant="h5" component="h2">
-                            Deaths
-                        </Typography>
-                        <Typography variant="h3" color="textPrimary" component="p">
-                          {figures?.deaths.confirmed?.toLocaleString(undefined, {maximumFractionDigits: 0})}
-                        </Typography>
-                    </CardContent>
-                </Card>
-            </Grid>
-            <Grid item xs={6} md={4}>
-                <Card>
-                    <CardContent>
-                        <Typography gutterBottom variant="h5" component="h2">
-                            Recovered
-                        </Typography>
-                        <Typography variant="h3" color="textPrimary" component="p">
-                          {figures?.recovered?.estimated?.toLocaleString(undefined, {maximumFractionDigits: 0})} <small>(est.)</small>
+                        {currentPopulation.toLocaleString(undefined, {maximumFractionDigits: 0})} <small>(est.)</small>
                         </Typography>
                     </CardContent>
                 </Card>
@@ -78,17 +70,19 @@ export const EpidemicViewer:FunctionComponent<{countryCode: string, disease: str
                 <Card>
                     <CardContent>
                         <dl>
-                            <dd>Current</dd>
-                            <dt>{figures?.cases.estimated} (est.)</dt>
+                            <dd>{epidemic.potentialCalculationIsoDate}</dd>
+                            
+                            <dd>Current (w/Social distancing) </dd>
+                            <dt>{cases.withSocialDistancingAsOfNow} (est.)</dt>
                             
                             <dd>Deaths</dd>
-                            <dt>{figures?.deaths.estimated} (est.)</dt>
+                            <dt>{deaths.withSocialDistancingAsOfNow} (est.)</dt>
 
                             <dd>Population</dd>
-                            <dt>{figures?.currentPopulation} (est.)</dt>
+                            <dt>{currentPopulation} (est.)</dt>
 
                             <dd>Recovered </dd>
-                            <dt>{figures?.recovered.estimated} (est.)</dt>
+                            <dt>{recovered.estimatedAsOfNow} (est.)</dt>
 
 
                             <dd>Offical Confirmed</dd>
@@ -97,5 +91,15 @@ export const EpidemicViewer:FunctionComponent<{countryCode: string, disease: str
                     </CardContent>
                 </Card>
             </Grid>
+            <Grid item xs={12}>    
+                <Typography variant="body2" color="textSecondary" component="p">
+                    * Current estimates are calculated using polynominal regression using datapoints after social distancing was enacted.
+                    <br />
+                    * Potential cases are calculated using linear regression using datapoints before social distancing was enacted.
+                    <br />
+                    * Lives saved assumes a CFR (Case Fatality Rate) of 0.51% [<a href="https://www.cebm.net/covid-19/global-covid-19-case-fatality-rates/">source</a>]
+                </Typography>
+            </Grid>
         </Grid>;
+    }
 }

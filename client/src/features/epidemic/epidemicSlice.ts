@@ -1,58 +1,99 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { AppThunk, RootState } from '../../app/store';
 import { EpidemicResponseModel, ReportFigureModel } from '../../types/api/EpidemicResponseModel';
+import regression from "regression";
+import moment, { duration } from "moment";
 
 interface EpidemicState {
-    calculatedFigures?: {
+    figures?: {
         cases: {
-            confirmed: number,
-            estimated: number,
+            confirmed: number
             change?: number
+            withSocialDistancingAsOfNow: number
+            noSocialDistancingAsOfNow: number
+            withSocialDistancingAsOfPotentialDate: number
+            noSocialDistancingAsOfPotentialDate: number
         }
         deaths: {
-            confirmed: number,
-            estimated: number,
+            confirmed: number
             change?: number
+            withSocialDistancingAsOfNow: number
+            noSocialDistancingAsOfNow: number
+            withSocialDistancingAsOfPotentialDate: number
+            noSocialDistancingAsOfPotentialDate: number
         },
         recovered: {
             confirmed: number,
-            estimated: number,
+            estimatedAsOfNow: number,
             change?: number
         }
         currentPopulation: number
-        diseaseName: string
-        asOfDateEpoch: number
     },
-    isLoading: boolean;
-    refreshInterval?: NodeJS.Timeout;
+    potentialCalculationDuration: string
+    isLoading: boolean
+    refreshInterval?: NodeJS.Timeout
     data?: EpidemicResponseModel
 }
 
 const initialState: EpidemicState = {
-  isLoading: false
+  isLoading: false,
+  potentialCalculationDuration: moment.duration(6, "months").toISOString()
 };
 
-const calculateConfirmedCases = (data: EpidemicResponseModel): number => {
-    const { confirmed, confirmedCasesGrowthRatePerMinute, reportDate } = data.cases;
+const predictNoSocialDistancing = (data:ReportFigureModel, socialDistancingStarted: Date, toDate: Date) : number => {
+    const { confirmed, confirmedCasesGrowthRatePerMinute, reportDate, previousFigures } = data;
+    debugger;
+
+    let dateItems:{date:Date, confirmed:number}[] =
+        previousFigures.map(f => { return { date: new Date(f.reportDate), confirmed: f.confirmed}});
+
+    dateItems = dateItems
+        .sort((a,b) =>  a.date.valueOf() - b.date.valueOf())
+        .filter(f => f.date <= socialDistancingStarted);
+
+    const dataItems:[number, number][] = dateItems.map((f, index) => [index + 1, f.confirmed]);
+
+    const reg = regression.exponential(dataItems);
+
+    const daysSinceLastDataItem = ((toDate.valueOf() - Math.max(...dateItems.map(d => d.date.valueOf()))) / 1000 / 60 / 60 / 24);
+
+    console.log("daysSinceLastDataItem: " + daysSinceLastDataItem.toString())
+
+    return reg.predict(daysSinceLastDataItem + dataItems.length)[1];
+}
+ 
+const predictWithSocialDistancing = (data:ReportFigureModel, socialDistancingStarted: Date, predictionDate: Date) : number => {
+    const { confirmed, confirmedCasesGrowthRatePerMinute, reportDate, previousFigures } = data;
     
-    const numberOfMinutesSinceReportDate = (new Date().valueOf() / 1000 / 60) - (new Date(reportDate).valueOf() / 1000 / 60);
+    if (previousFigures && previousFigures.length > 1) {
+        let dateItems:{date:Date, confirmed:number}[] =
+            previousFigures.map(f => { return { date: new Date(f.reportDate), confirmed: f.confirmed}});
+        
+        dateItems = dateItems.filter(d => d.date.valueOf() >= socialDistancingStarted.valueOf())
 
-    console.log(`numberOfMinutesSinceReportDate: ${numberOfMinutesSinceReportDate}, growthRate: ${confirmedCasesGrowthRatePerMinute}`);
+        dateItems = dateItems
+            .sort((a,b) =>  a.date.valueOf() - b.date.valueOf());
+            
+        const dataItems:[number, number][] = dateItems.map((f, index) => [index + 1, f.confirmed]);
 
-    if (confirmedCasesGrowthRatePerMinute)
-        return confirmed + (numberOfMinutesSinceReportDate * confirmedCasesGrowthRatePerMinute);
-    else
-        return confirmed;
-};
+        const reg = regression.polynomial(dataItems);
 
-const calculateConfirmedDeaths = (data: EpidemicResponseModel): number => {
-    return data.deaths.confirmed;
-};
+        const daysSinceLastDataItem = ((predictionDate!.valueOf() - Math.max(...dateItems.map(d => d.date.valueOf()))) / 1000 / 60 / 60 / 24);
+        return reg.predict(dataItems.length + daysSinceLastDataItem)[1];
+    } else {
+        const numberOfMinutesSinceReportDate = (predictionDate!.valueOf() / 1000 / 60) - (new Date(reportDate).valueOf() / 1000 / 60);
+
+        if (confirmedCasesGrowthRatePerMinute)
+            return confirmed + (numberOfMinutesSinceReportDate * confirmedCasesGrowthRatePerMinute);
+        else
+            return confirmed;
+    }
+}
 
 const calculateCurrentPopulation = (data: EpidemicResponseModel): number => {
     const { population, populationGrowthPerMinute, populationReportDate } = data.country;
-    
-    return population + (((new Date().valueOf() / 1000 / 60) - (new Date(populationReportDate).valueOf() / 1000 / 60)) * populationGrowthPerMinute);
+
+    return population + (moment().diff(moment(populationReportDate), "minutes") * populationGrowthPerMinute);
 };
 
 const calculateRecoveredCases = (data: EpidemicResponseModel, calculatedConfirmedCases: number): number => {
@@ -88,9 +129,9 @@ const getLastReportedFigure = (figures:ReportFigureModel): number | undefined =>
         return undefined;
     const initialDate = new Date(figures.reportDate);
 
-    let sortedFigures = figures.previousFigures.sort((a, b) => new Date(a.reportDate).valueOf() - new Date(b.reportDate).valueOf());
+    let sortedFigures = figures.previousFigures.sort((a, b) => new Date(b.reportDate).valueOf() - new Date(a.reportDate).valueOf());
 
-    sortedFigures = sortedFigures.filter(figure => new Date(figure.reportDate) < initialDate);
+    sortedFigures = sortedFigures.filter(figure => moment(figure.reportDate).isBefore(moment(initialDate)));
     
     if (sortedFigures.length)
         return sortedFigures[0].confirmed;
@@ -99,80 +140,62 @@ const getLastReportedFigure = (figures:ReportFigureModel): number | undefined =>
 };
 
 export const slice = createSlice({
-  name: 'epidemic',
-  initialState,
-  reducers: {
-    tickCalculatedFigures: (state, action:PayloadAction<NodeJS.Timer>) => {
-      // Redux Toolkit allows us to write "mutating" logic in reducers. It
-      // doesn't actually mutate the state because it uses the immer library,
-      // which detects changes to a "draft state" and produces a brand new
-      // immutable state based off those changes
-      //Increases the current population
+    name: 'epidemic',
+    initialState,
+    reducers: {
+        tickCalculatedFigures: (state, action:PayloadAction<NodeJS.Timer>) => {
+            const { socialDistancingStarted } = state.data!.country;
+            const potentialDate = moment().add(duration(state.potentialCalculationDuration)).toDate();
+            const socialDistancingStartDate = new Date(socialDistancingStarted);
+            const now = new Date();
 
-      const calculatedConfirmedCases = calculateConfirmedCases(state.data!);
+            const esimatedCasesWithSocialDistancingAsOfNow = predictWithSocialDistancing(state.data!.cases, socialDistancingStartDate, now);
+            
+            const confirmedFatalityRate = state.data!.deaths.confirmed / state.data!.cases.confirmed;
 
-      state.calculatedFigures = {
-        ...state.calculatedFigures,
-        cases: {
-            confirmed: state.data!.cases.confirmed,
-            estimated: calculatedConfirmedCases,
-            change: calculateChange(state.data!.cases)
-        },
-        deaths: {
-            confirmed: state.data!.deaths.confirmed,
-            estimated: calculateConfirmedDeaths(state.data!),
-            change: calculateChange(state.data!.cases)
-        },
-        recovered: {
-            confirmed: state.data?.recoveries.confirmed!,
-            estimated: calculateRecoveredCases(state.data!, calculatedConfirmedCases),
-            change: calculateChange(state.data!.cases)
-        },
-        currentPopulation: calculateCurrentPopulation(state.data!),
-        diseaseName: state.data!.disease.name,
-        asOfDateEpoch: new Date().valueOf(),
-      };
+            state.figures = {
+                cases: {
+                    confirmed: state.data!.cases.confirmed,
+                    change: calculateChange(state.data!.cases),
+                    withSocialDistancingAsOfNow: esimatedCasesWithSocialDistancingAsOfNow,
+                    noSocialDistancingAsOfNow: predictNoSocialDistancing(state.data!.cases, socialDistancingStartDate, now),
+                    noSocialDistancingAsOfPotentialDate: predictNoSocialDistancing(state.data!.cases, socialDistancingStartDate, potentialDate),
+                    withSocialDistancingAsOfPotentialDate: predictWithSocialDistancing(state.data!.cases, socialDistancingStartDate, potentialDate)
+                },
+                deaths: {
+                    confirmed: state.data!.deaths.confirmed,
+                    withSocialDistancingAsOfNow: predictWithSocialDistancing(state.data!.deaths, new Date(state.data!.country.socialDistancingStarted), now),
+                    noSocialDistancingAsOfNow: predictNoSocialDistancing(state.data!.cases, socialDistancingStartDate, now) * confirmedFatalityRate,
+                    change: calculateChange(state.data!.deaths),
+                    withSocialDistancingAsOfPotentialDate: predictWithSocialDistancing(state.data!.deaths, new Date(socialDistancingStarted), potentialDate),
+                    noSocialDistancingAsOfPotentialDate: predictNoSocialDistancing(state.data!.cases, socialDistancingStartDate, potentialDate) * (state.data!.deaths.confirmed / state.data!.cases.confirmed)
+                },
+                recovered: {
+                    confirmed: state.data?.recoveries.confirmed!,
+                    estimatedAsOfNow: calculateRecoveredCases(state.data!, esimatedCasesWithSocialDistancingAsOfNow),
+                    change: calculateChange(state.data!.recoveries)
+                },
+                currentPopulation: calculateCurrentPopulation(state.data!)
+            };
 
-      state.refreshInterval = action.payload;
+            state.refreshInterval = action.payload;
+        },
+        clearEpidemic: (state, action: PayloadAction) => {
+            if (state.refreshInterval)
+                clearInterval(state.refreshInterval);
+
+            state.figures = undefined;
+        },
+        isLoadingFromServer: (state, action: PayloadAction) => {
+            state.isLoading = true;
+        },
+        // Use the PayloadAction type to declare the contents of `action.payload`
+        loadEpidemicResponseFromServer: (state, action: PayloadAction<EpidemicResponseModel>) => {
+            state.data = action.payload;
+            state.figures = undefined;
+            state.isLoading = false;
+        },
     },
-    clearEpidemic: (state, action: PayloadAction) => {
-      if (state.refreshInterval)
-        clearInterval(state.refreshInterval);
-
-      state.calculatedFigures = undefined;
-    },
-    isLoadingFromServer: (state, action: PayloadAction) => {
-      state.isLoading = true;
-    },
-    // Use the PayloadAction type to declare the contents of `action.payload`
-    loadEpidemicResponseFromServer: (state, action: PayloadAction<EpidemicResponseModel>) => {
-      state.data = action.payload;
-      state.isLoading = false;
-
-      const calculatedConfirmedCases = calculateConfirmedCases(state.data!);
-
-      //Calculate current cases
-      state.calculatedFigures = {
-        cases: {
-            confirmed: state.data!.cases.confirmed,
-            estimated: calculatedConfirmedCases
-        },
-        deaths: {
-            confirmed: state.data!.deaths.confirmed,
-            estimated: calculateConfirmedDeaths(state.data!)
-        },
-        recovered: {
-            confirmed: state.data?.recoveries.confirmed!,
-            estimated: calculateRecoveredCases(state.data!, calculatedConfirmedCases)
-        },
-        currentPopulation: calculateCurrentPopulation(state.data!),
-        diseaseName: state.data!.disease.name,
-        asOfDateEpoch: new Date().valueOf()
-      };
-
-
-    },
-  },
 });
 
 export const { tickCalculatedFigures, clearEpidemic } = slice.actions;
@@ -209,7 +232,7 @@ export const loadEpidemicAsync = (countryCode: string, disease: string): AppThun
 // The function below is called a selector and allows us to select a value from
 // the state. Selectors can also be defined inline where they're used instead of
 // in the slice file. For example: `useSelector((state: RootState) => state.counter.value)`
-export const currentEpidemicFigures = (state: RootState) => state.epidemic.calculatedFigures;
+export const currentEpidemicFigures = (state: RootState) => state.epidemic.figures;
 export const currentEpidemic = (state:RootState) => { 
   return { 
     loading: state.epidemic.isLoading,
@@ -217,7 +240,8 @@ export const currentEpidemic = (state:RootState) => {
     disease: state.epidemic.data?.disease?.name,
     countryCode: state.epidemic?.data?.country?.countryCode,
     officialConfirmedCases: state.epidemic?.data?.cases.confirmed,
-    officialConfirmCasesDate: new Date(state.epidemic?.data?.cases.reportDate!)
+    officialConfirmCasesDate: new Date(state.epidemic?.data?.cases.reportDate!),
+    potentialCalculationIsoDate: moment().add(duration(state.epidemic?.potentialCalculationDuration)).toDate().toLocaleDateString()
   } 
 }
 
