@@ -7,7 +7,7 @@ export const store = configureStore({
   reducer: {
     epidemic: epidemicReducer,
     diseases: diseaseReducer,
-    countryList: countryReducer
+    countries: countryReducer
   },
 });
 

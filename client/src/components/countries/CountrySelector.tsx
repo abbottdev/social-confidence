@@ -26,7 +26,7 @@ export const CountrySelector:FunctionComponent = () => {
     useEffect(() => {
         if (countries.loaded)
         {
-            setCurrentCountry(countries.countries.find(c => c.Code === urlParams.countryCode));
+            setCurrentCountry(countries.allCountries.find(c => c.Code === urlParams.countryCode));
             setLoaded(true);
         }
     }, [countries, urlParams.countryCode]);
@@ -35,7 +35,7 @@ export const CountrySelector:FunctionComponent = () => {
             <Select disabled={!loaded} displayEmpty={false}
                 value={isUndefined(currentCountry) ? "" : currentCountry!.Code}
                 onChange={onChange}>
-                {countries.countries.map(country => (
+                {countries.allCountries.map(country => (
                     <MenuItem key={country.Code} value={country.Code}>
                         <span className={`flag-icon flag-icon-${country.Code}`}></span>&nbsp;{country.Name}
                     </MenuItem>

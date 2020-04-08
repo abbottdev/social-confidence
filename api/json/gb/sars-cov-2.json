@@ -1,0 +1,309 @@
+{
+    "cases": {
+      "confirmed": 41903,
+      "reportDate": "2020-04-04T08:00:00.000+01:00",
+      "confirmedCasesGrowthRatePerMinute": 2.947222222222222,
+      "previousFigures": [
+        {
+          "confirmed": 41903,
+          "reportDate": "2020-04-04T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 38168,
+          "reportDate": "2020-04-03T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 33718,
+          "reportDate": "2020-04-02T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 29474,
+          "reportDate": "2020-04-01T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 25150,
+          "reportDate": "2020-03-31T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 22141,
+          "reportDate": "2020-03-30T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 19522,
+          "reportDate": "2020-03-29T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 17089,
+          "reportDate": "2020-03-28T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 14543,
+          "reportDate": "2020-03-27T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 11658,
+          "reportDate": "2020-03-26T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 9529,
+          "reportDate": "2020-03-25T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 8077,
+          "reportDate": "2020-03-24T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 6650,
+          "reportDate": "2020-03-23T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 5683,
+          "reportDate": "2020-03-22T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 5018,
+          "reportDate": "2020-03-21T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 3983,
+          "reportDate": "2020-03-20T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 3269,
+          "reportDate": "2020-03-19T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 2626,
+          "reportDate": "2020-03-18T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 1950,
+          "reportDate": "2020-03-17T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 1543,
+          "reportDate": "2020-03-16T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 1372,
+          "reportDate": "2020-03-15T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 1140,
+          "reportDate": "2020-03-14T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 798,
+          "reportDate": "2020-03-13T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 590,
+          "reportDate": "2020-03-12T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 456,
+          "reportDate": "2020-03-11T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 373,
+          "reportDate": "2020-03-10T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 319,
+          "reportDate": "2020-03-09T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 273,
+          "reportDate": "2020-03-08T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 206,
+          "reportDate": "2020-03-07T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 163,
+          "reportDate": "2020-03-06T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 115,
+          "reportDate": "2020-03-05T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 85,
+          "reportDate": "2020-03-04T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 51,
+          "reportDate": "2020-03-03T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 40,
+          "reportDate": "2020-03-02T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 35,
+          "reportDate": "2020-03-01T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 23,
+          "reportDate": "2020-02-29T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 20,
+          "reportDate": "2020-02-28T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 15,
+          "reportDate": "2020-02-27T08:00:00.000+01:00"
+        }
+      ]
+    },
+    "deaths": {
+      "confirmed": 4313,
+      "reportDate": "2020-04-04T08:00:00.000+01:00",
+      "confirmedCasesGrowthRatePerMinute": null,
+      "previousFigures": [
+        {
+          "confirmed": 4313,
+          "reportDate": "2020-04-04T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 3605,
+          "reportDate": "2020-04-03T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 2921,
+          "reportDate": "2020-04-02T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 2352,
+          "reportDate": "2020-04-01T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 1789,
+          "reportDate": "2020-03-31T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 1408,
+          "reportDate": "2020-03-30T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 1228,
+          "reportDate": "2020-03-29T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 1019,
+          "reportDate": "2020-03-28T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 759,
+          "reportDate": "2020-03-27T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 578,
+          "reportDate": "2020-03-26T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 463,
+          "reportDate": "2020-03-25T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 422,
+          "reportDate": "2020-03-24T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 335,
+          "reportDate": "2020-03-23T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 281,
+          "reportDate": "2020-03-22T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 233,
+          "reportDate": "2020-03-21T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 177,
+          "reportDate": "2020-03-20T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 144,
+          "reportDate": "2020-03-19T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 103,
+          "reportDate": "2020-03-18T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 71,
+          "reportDate": "2020-03-17T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 55,
+          "reportDate": "2020-03-16T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 35,
+          "reportDate": "2020-03-15T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 21,
+          "reportDate": "2020-03-14T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 8,
+          "reportDate": "2020-03-12T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 6,
+          "reportDate": "2020-03-10T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 5,
+          "reportDate": "2020-03-09T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 3,
+          "reportDate": "2020-03-08T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 2,
+          "reportDate": "2020-03-07T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 1,
+          "reportDate": "2020-03-06T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 1,
+          "reportDate": "2020-03-05T08:00:00.000+01:00"
+        },
+        {
+          "confirmed": 0,
+          "reportDate": "2020-03-04T08:00:00.000+01:00"
+        }
+      ]
+    },
+    "recoveries": {
+      "confirmed": 135,
+      "reportDate": "2020-02-04T08:00:00.000+01:00",
+      "confirmedCasesGrowthRatePerMinute": null,
+      "previousFigures": [
+        
+      ]
+    },
+    "recoveriesShouldEstimate": true,
+    "country": {
+      "countryCode": "GB",
+      "population": 67000000,
+      "populationReportDate": "2020-01-01T00:00:00.000+01:00",
+      "populationGrowthPerMinute": 0.1,
+      "socialDistancingStarted": "2020-03-16T00:00:00.000+01:00"
+    },
+    "disease": {
+      "name": "SARS-COV-2",
+      "rNaughtValue": 2.5,
+      "diseaseLengthEstimateInMins": 10080
+    }
+  }

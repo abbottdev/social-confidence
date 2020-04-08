@@ -3,6 +3,9 @@ import { AppThunk, RootState } from '../../app/store';
 import { EpidemicResponseModel, ReportFigureModel } from '../../types/api/EpidemicResponseModel';
 import regression from "regression";
 import moment, { duration } from "moment";
+import { Country } from '../../types/Country';
+import { useSelector } from 'react-redux';
+import { countryListSelector } from '../countries/countryListSlice';
 
 interface EpidemicState {
     figures?: {
@@ -32,12 +35,14 @@ interface EpidemicState {
     potentialCalculationDuration: string
     isLoading: boolean
     refreshInterval?: NodeJS.Timeout
-    data?: EpidemicResponseModel
+    data?: EpidemicResponseModel,
+    country: Country | null
 }
 
 const initialState: EpidemicState = {
   isLoading: false,
-  potentialCalculationDuration: moment.duration(6, "months").toISOString()
+  potentialCalculationDuration: moment.duration(6, "months").toISOString(),
+  country: null
 };
 
 const predictNoSocialDistancing = (data:ReportFigureModel, socialDistancingStarted: Date, toDate: Date) : number => {
@@ -76,7 +81,7 @@ const predictWithSocialDistancing = (data:ReportFigureModel, socialDistancingSta
             
         const dataItems:[number, number][] = dateItems.map((f, index) => [index + 1, f.confirmed]);
 
-        const reg = regression.polynomial(dataItems);
+        const reg = regression.exponential(dataItems);
 
         const daysSinceLastDataItem = ((predictionDate!.valueOf() - Math.max(...dateItems.map(d => d.date.valueOf()))) / 1000 / 60 / 60 / 24);
         return reg.predict(dataItems.length + daysSinceLastDataItem)[1];
@@ -90,8 +95,8 @@ const predictWithSocialDistancing = (data:ReportFigureModel, socialDistancingSta
     }
 }
 
-const calculateCurrentPopulation = (data: EpidemicResponseModel): number => {
-    const { population, populationGrowthPerMinute, populationReportDate } = data.country;
+const calculateCurrentPopulation = (country: Country): number => {
+    const { population, populationGrowthPerMinute, populationReportDate } = country;
 
     return population + (moment().diff(moment(populationReportDate), "minutes") * populationGrowthPerMinute);
 };
@@ -144,15 +149,15 @@ export const slice = createSlice({
     initialState,
     reducers: {
         tickCalculatedFigures: (state, action:PayloadAction<NodeJS.Timer>) => {
-            const { socialDistancingStarted } = state.data!.country;
+            const { socialDistancingStartedInHostCountry } = state.data!;
             const potentialDate = moment().add(duration(state.potentialCalculationDuration)).toDate();
-            const socialDistancingStartDate = new Date(socialDistancingStarted);
+            const socialDistancingStartDate = new Date(socialDistancingStartedInHostCountry);
             const now = new Date();
 
             const esimatedCasesWithSocialDistancingAsOfNow = predictWithSocialDistancing(state.data!.cases, socialDistancingStartDate, now);
             
             const confirmedFatalityRate = state.data!.deaths.confirmed / state.data!.cases.confirmed;
-
+            
             state.figures = {
                 cases: {
                     confirmed: state.data!.cases.confirmed,
@@ -164,10 +169,10 @@ export const slice = createSlice({
                 },
                 deaths: {
                     confirmed: state.data!.deaths.confirmed,
-                    withSocialDistancingAsOfNow: predictWithSocialDistancing(state.data!.deaths, new Date(state.data!.country.socialDistancingStarted), now),
+                    withSocialDistancingAsOfNow: predictWithSocialDistancing(state.data!.deaths, new Date(state.data!.socialDistancingStartedInHostCountry), now),
                     noSocialDistancingAsOfNow: predictNoSocialDistancing(state.data!.cases, socialDistancingStartDate, now) * confirmedFatalityRate,
                     change: calculateChange(state.data!.deaths),
-                    withSocialDistancingAsOfPotentialDate: predictWithSocialDistancing(state.data!.deaths, new Date(socialDistancingStarted), potentialDate),
+                    withSocialDistancingAsOfPotentialDate: predictWithSocialDistancing(state.data!.deaths, new Date(socialDistancingStartedInHostCountry), potentialDate),
                     noSocialDistancingAsOfPotentialDate: predictNoSocialDistancing(state.data!.cases, socialDistancingStartDate, potentialDate) * (state.data!.deaths.confirmed / state.data!.cases.confirmed)
                 },
                 recovered: {
@@ -175,7 +180,7 @@ export const slice = createSlice({
                     estimatedAsOfNow: calculateRecoveredCases(state.data!, esimatedCasesWithSocialDistancingAsOfNow),
                     change: calculateChange(state.data!.recoveries)
                 },
-                currentPopulation: calculateCurrentPopulation(state.data!)
+                currentPopulation: calculateCurrentPopulation(state.country!)
             };
 
             state.refreshInterval = action.payload;
@@ -190,8 +195,9 @@ export const slice = createSlice({
             state.isLoading = true;
         },
         // Use the PayloadAction type to declare the contents of `action.payload`
-        loadEpidemicResponseFromServer: (state, action: PayloadAction<EpidemicResponseModel>) => {
-            state.data = action.payload;
+        loadEpidemicResponseFromServer: (state, action: PayloadAction<{model: EpidemicResponseModel, country: Country}>) => {
+            state.data = action.payload.model;
+            state.country = action.payload.country;
             state.figures = undefined;
             state.isLoading = false;
         },
@@ -212,10 +218,10 @@ export const queueUpdate = (): AppThunk => dispatch => {
 // can be dispatched like a regular action: `dispatch(incrementAsync(10))`. This
 // will call the thunk with the `dispatch` function as the first argument. Async
 // code can then be executed and other actions can be dispatched
-export const loadEpidemicAsync = (countryCode: string, disease: string): AppThunk => async dispatch => {
+export const loadEpidemicAsync = (country: Country, disease: string): AppThunk => async dispatch => {
     dispatch(slice.actions.isLoadingFromServer());
 
-    const response= await fetch("http://social-confidence.s3-website.eu-west-2.amazonaws.com/api/countries/gb/diseases/sars-cov-2-with-previous.json");
+    const response= await fetch("http://social-confidence.s3-website.eu-west-2.amazonaws.com/api/countries/gb/diseases/sars-cov-2-automated.json");
 
     if (response.ok) {
         const body = await response.json();
@@ -224,7 +230,7 @@ export const loadEpidemicAsync = (countryCode: string, disease: string): AppThun
             ...body
         };
 
-        dispatch(slice.actions.loadEpidemicResponseFromServer(model));
+        dispatch(slice.actions.loadEpidemicResponseFromServer({model: model, country: country}));
         dispatch(queueUpdate());
     }
 };
@@ -238,7 +244,7 @@ export const currentEpidemic = (state:RootState) => {
     loading: state.epidemic.isLoading,
     loaded: state.epidemic.isLoading === false && state.epidemic.data != null,
     disease: state.epidemic.data?.disease?.name,
-    countryCode: state.epidemic?.data?.country?.countryCode,
+    countryCode: state.countries.activeCountry?.Code,
     officialConfirmedCases: state.epidemic?.data?.cases.confirmed,
     officialConfirmCasesDate: new Date(state.epidemic?.data?.cases.reportDate!),
     potentialCalculationIsoDate: moment().add(duration(state.epidemic?.potentialCalculationDuration)).toDate().toLocaleDateString()

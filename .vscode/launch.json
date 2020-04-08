@@ -1,0 +1,38 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "node",
+            "request": "launch",
+            "name": "Launch server debug",
+            "program": "${workspaceRoot}/api/functions/update-statistics/node_modules/ts-node-dev/bin/ts-node-dev",
+            "args": [
+              "--inspect",
+              "--no-notify",
+              "--respawn",
+              "--transpileOnly",
+              "./src/local.ts"
+            ],
+            "cwd": "${workspaceRoot}/api/functions/update-statistics/",
+            "protocol": "inspector",
+            "internalConsoleOptions": "openOnSessionStart",
+            "port": 9229
+        },
+        {
+			"name": "Node Inspector",
+			"type": "node",
+			"request": "launch",
+			"args": ["${workspaceRoot}/api/functions/update-statistics/src/local.ts"],
+			"runtimeArgs": ["-r", "ts-node/register"],
+			"cwd": "${workspaceRoot}/api/functions/update-statistics/",
+			"protocol": "inspector",
+			"internalConsoleOptions": "openOnSessionStart",
+			"env": {
+				"TS_NODE_IGNORE": "false"
+			}
+		}
+    ]
+}

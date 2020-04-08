@@ -3,16 +3,24 @@ import { useSelector, useDispatch } from 'react-redux';
 import { currentEpidemicFigures, currentEpidemic, clearEpidemic, loadEpidemicAsync } from "../../features/epidemic/epidemicSlice";
 import { Card, CardContent, Grid, CircularProgress, CardHeader, Typography } from '@material-ui/core';
 import { EpidemicDataItem } from './EpidemicDataItem';
+import { countryListSelector, setActiveCountry } from '../../features/countries/countryListSlice';
 
 export const EpidemicViewer:FunctionComponent<{countryCode: string, disease: string}> = ({countryCode, disease}) => {
     const dispatch = useDispatch();
     const epidemic = useSelector(currentEpidemic);
     const figures = useSelector(currentEpidemicFigures);
-    
+    const countries = useSelector(countryListSelector);
+
+    const { activeCountry, allCountries } = countries;
+
     useEffect(() => {
-        dispatch(clearEpidemic());
-        dispatch(loadEpidemicAsync(countryCode, disease));
-    }, [countryCode, disease, dispatch]);
+        if (activeCountry) {       
+            dispatch(clearEpidemic());
+            dispatch(loadEpidemicAsync(activeCountry!, disease));
+        } else {
+            dispatch(setActiveCountry(allCountries.find(c => c.Code == countryCode)!))
+        }
+    }, [countryCode, disease, dispatch, countries]);
 
     if (epidemic.loading || figures == null)
         return <CircularProgress />
@@ -26,8 +34,19 @@ export const EpidemicViewer:FunctionComponent<{countryCode: string, disease: str
                 </Typography>
             </Grid>
             <Grid item xs={12}>    
+                <Typography variant="h2" color="textSecondary">
+                    With Social Distancing
+                </Typography>
+            </Grid>
+            <Grid item xs={12}>    
                 <Typography variant="h2" color="textSecondary" component="p">
                 Lives saved: {(deaths.noSocialDistancingAsOfNow - deaths.withSocialDistancingAsOfNow).toLocaleString(undefined, {minimumFractionDigits: 6})}<br />
+                </Typography>
+            </Grid>
+            
+            <Grid item xs={12}>    
+                <Typography variant="h2" color="textSecondary">
+                    Without Social Distancing
                 </Typography>
             </Grid>
             <Grid item xs={6} md={4}>

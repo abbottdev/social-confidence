@@ -14,16 +14,10 @@ export interface EpidemicResponseModel {
     deaths: ReportFigureModel
     recoveries: ReportFigureModel
     recoveriesShouldEstimate: boolean
-    country: {
-        countryCode: string
-        population: number
-        populationReportDate: Date
-        populationGrowthPerMinute: number
-        socialDistancingStarted: string
-    },
     disease: {
         name: string
         rNaughtValue: number
         diseaseLengthEstimateInMins: number
     },
+    socialDistancingStartedInHostCountry: string
 }

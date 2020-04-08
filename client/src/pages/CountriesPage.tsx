@@ -17,7 +17,7 @@ export function CountriesPage() : JSX.Element {
         
         <h2>Country List</h2>
         <ul>
-            {countryList.countries.map(
+            {countryList.allCountries.map(
                 c =>
                 <li key={c.Code}>
                     <RouterLink to={`/countries/${c.Code}/diseases/`}><CountryName countryCode={c.Code} /></RouterLink>
