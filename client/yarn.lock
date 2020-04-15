@@ -9088,6 +9088,11 @@ react-is@^16.12.0, react-is@^16.6.0, react-is@^16.7.0, react-is@^16.8.0, react-i
   resolved "https://registry.yarnpkg.com/react-is/-/react-is-16.13.1.tgz#789729a4dc36de2999dc156dd6c1d9c18cea56a4"
   integrity sha512-24e6ynE2H+OKt4kqsOvNd8kBpV65zoxbA4BVsEOB3ARVWQki/DHzaUoC5KuON/BiccDaCCTZBuOcfZs70kR8bQ==
 
+react-metatags-hook@^1.2.0:
+  version "1.2.0"
+  resolved "https://registry.yarnpkg.com/react-metatags-hook/-/react-metatags-hook-1.2.0.tgz#116b6398f8f1ab914f3fa86819f86feb34ed9649"
+  integrity sha512-UF1Mn4smtkzX2z6X7BSBEcNvW/gq3rTORrZPpoBeCsGX+xbN5NdcdTAAEYWTYde7qaZADDfrvZ9ys47pukZGkA==
+
 react-redux@^7.2.0:
   version "7.2.0"
   resolved "https://registry.yarnpkg.com/react-redux/-/react-redux-7.2.0.tgz#f970f62192b3981642fec46fd0db18a074fe879d"

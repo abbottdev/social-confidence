@@ -1,10 +1,12 @@
 
 export interface ReportFigureModel {
-    confirmed: number
+    cumulative: number
+    change: number
     reportDate: string
     confirmedCasesGrowthRatePerMinute: number | null
     previousFigures: {
-        confirmed: number
+        cumulative: number
+        change: number
         reportDate: string
     }[]
 }

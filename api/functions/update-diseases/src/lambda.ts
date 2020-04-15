@@ -1,4 +1,4 @@
-import { StatisticsHandler } from "./handler";
+import { DiseaseListHandler } from "./handler";
 
 type cloudWatchScheduledEvent = {
     "version": string,
@@ -16,7 +16,7 @@ type customEvent = {
     bucketName: string
 }
 
-exports.handler = async (event:cloudWatchScheduledEvent | customEvent) => {
+export const handler = async (event:cloudWatchScheduledEvent | customEvent) => {
     let bucketName = "social-confidence";
 
     if (isCustomEvent(event)) {
@@ -26,9 +26,9 @@ exports.handler = async (event:cloudWatchScheduledEvent | customEvent) => {
             bucketName = event.detail["bucketName"]
     }
 
-    let handler = new StatisticsHandler(bucketName);
+    let handler = new DiseaseListHandler(bucketName);
 
-    await handler.updateGbStatistics();
+    await handler.updateDiseasesForAllCountries();
 }
 
 function isCustomEvent(evt: cloudWatchScheduledEvent | customEvent): evt is customEvent {

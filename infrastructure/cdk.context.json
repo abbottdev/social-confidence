@@ -1,0 +1,8 @@
+{
+  "@aws-cdk/core:enableStackNameDuplicates": "true",
+  "aws-cdk:enableDiffNoFail": "true",
+  "hosted-zone:account=158176244280:domainName=abbott.rocks:region=eu-west-2": {
+    "Id": "/hostedzone/ZLXWB5U5OATZ6",
+    "Name": "abbott.rocks."
+  }
+}

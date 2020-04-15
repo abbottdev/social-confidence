@@ -6,7 +6,7 @@ import { PredictionItem } from './PredictionItem';
 import { countryListSelector } from '../../features/countries/countryListSlice';
 import moment, { duration } from 'moment';
 
-const styles = makeStyles(({palette, breakpoints}) => { 
+const cardHeaderStyles = makeStyles(({palette}) => { 
     return {
         root: {
             display: 'flex',
@@ -41,20 +41,11 @@ const styles = makeStyles(({palette, breakpoints}) => {
                 transform: 'translateY(-50%)',
                 backgroundColor: 'rgba(0, 0, 0, 0.08)'
             }
-        },
-        slider: {
-            '& .MuiSlider-markLabel': {
-                [breakpoints.down('xs')]: {
-                    maxWidth: 50,
-                    textAlign: 'center',
-                    fontSize: '0.7em'
-                }
-            }
         }
     }
 });
 
-export const EpidemicViewer:FunctionComponent<{countryCode: string, disease: string}> = () => {
+export const EpidemicViewerDebug:FunctionComponent<{countryCode: string, disease: string}> = () => {
     const epidemic = useSelector(currentEpidemic);
     const countries = useSelector(countryListSelector);
     
@@ -63,7 +54,7 @@ export const EpidemicViewer:FunctionComponent<{countryCode: string, disease: str
     const figures = useSelector(figuresSelector);
     const fatalityRate = useSelector(caseFatalityRateSelector);
     const values = useSelector(valuesSelector);
-    const cardHeaderStyle = styles();
+    const cardHeaderStyle = cardHeaderStyles();
 
     const marks = [
         {
@@ -72,23 +63,23 @@ export const EpidemicViewer:FunctionComponent<{countryCode: string, disease: str
         },
         {
             value: 2,
-            label: "2 month"
+            label: "2 months"
         },
         {
             value: 3,
-            label: "3 month"
+            label: "3 months"
         },
         {
             value: 4,
-            label: "4 month"
+            label: "4 months"
         },
         {
             value: 5,
-            label: "5 month"
+            label: "5 months"
         },
         {
             value: 6,
-            label: "6 month"
+            label: "6 months"
         }
     ];
 
@@ -163,14 +154,14 @@ export const EpidemicViewer:FunctionComponent<{countryCode: string, disease: str
             </Grid>
 
             
-            <Grid item xs={12}>    
+            <Grid item xs={12} alignContent="center">    
                 <Typography variant="h6" color="textSecondary">
                     {futureDateDisplay?.toUpperCase()}
                 </Typography>
             </Grid>
             <Grid item xs={12}>  
                 <Paper style={{padding: '0 50px'}}>
-                    <Slider marks={marks} value={selectedMark?.value} min={1} max={6} step={null} onChange={onSelectedMonthChange} className={cardHeaderStyle.slider} />
+                    <Slider marks={marks} value={selectedMark?.value} min={1} max={6} step={null} onChange={onSelectedMonthChange} />
                 </Paper>
             </Grid>
 
@@ -217,12 +208,118 @@ export const EpidemicViewer:FunctionComponent<{countryCode: string, disease: str
                         </Box>
                     </Box>
                 </Card>
-            </Grid> 
+            </Grid>
+
+            <Grid item xs={12}>    
+                <Typography variant="h2" color="textSecondary">
+                    With Social Distancing
+                </Typography>  
+                <Typography variant="h4" color="textSecondary" component="p">
+                    Started: {epidemic.socialDistancingStarted}<br />
+                </Typography>
+            </Grid>
+            <Grid item xs={12}>    
+                <Typography variant="h2" color="textSecondary" component="p"> 
+                Lives saved: {(now.casesWithoutSocialDistancing.cumulative - now.deathsWithSocialDistancing.cumulative).toLocaleString(undefined, {minimumFractionDigits: 6})}<br />
+                </Typography>
+            </Grid>
+            
+            <Grid item xs={6} md={4}>
+                <PredictionItem title="Cases now casesWithSocialDistancing" {...now.casesWithSocialDistancing} {...selectedRegressionModel.cases.withSocialDistancing}  />
+                Cases Prevented to date: {(now.casesWithoutSocialDistancing.cumulative - now.casesWithSocialDistancing.cumulative).toLocaleString(undefined, {minimumFractionDigits: 6})}<br />
+                Potential Cases: {(now.casesWithoutSocialDistancing.cumulative).toLocaleString(undefined, {minimumFractionDigits: 6})}
+            </Grid>
+            <Grid item xs={6} md={4}>
+                <PredictionItem title="Deaths withSocialDistancingAsOfNow" {...now.deathsWithSocialDistancing} {...selectedRegressionModel.deaths.withSocialDistancing} />
+                
+                Potential Deaths: {(now.deathsWithoutSocialDistancing.cumulative).toLocaleString(undefined, {minimumFractionDigits: 6})}
+            </Grid>
+            
+            <Grid item xs={12}>    
+                <Typography variant="h2" color="textSecondary">
+                    Without Social Distancing
+                </Typography>
+            </Grid>
+            <Grid item xs={6} md={4}>
+                <PredictionItem title="Cases now" {...now.casesWithoutSocialDistancing} {...selectedRegressionModel.cases.noSocialDistancing} />
+            </Grid>
+            <Grid item xs={6} md={4}>
+                <PredictionItem title="Deaths now" {...now.deathsWithoutSocialDistancing} {...selectedRegressionModel.deaths.noSocialDistancing} />
+            </Grid>
+            
+            <Grid item xs={12}>    
+                <Typography variant="h2" color="textSecondary">
+                    Future
+                </Typography>  
+                <Typography variant="h4" color="textSecondary" component="p">
+                    {futureDateValue?.toLocaleString()}<br />
+                </Typography>
+            </Grid>
+            
+            <Grid item xs={6} md={4}>
+                <PredictionItem title={`Cases in ${futureDateDisplay} WithoutSocialDistancing`} {...futureDate.casesWithoutSocialDistancing}{...selectedRegressionModel.cases.noSocialDistancing}  />
+            </Grid>
+             
+            <Grid item xs={6} md={4}>
+                <PredictionItem title={`Deaths in ${futureDateDisplay} deathsWithoutSocialDistancing`} {...futureDate.deathsWithoutSocialDistancing}{...selectedRegressionModel.deaths.noSocialDistancing}  />
+                
+            </Grid>
+            
+            <Grid item xs={6} md={4}>
+                <PredictionItem title={`Cases in ${futureDateDisplay} casesWithSocialDistancing`} {...futureDate.casesWithSocialDistancing}{...selectedRegressionModel.cases.withSocialDistancing}  />
+
+                <textarea value={JSON.stringify(values?.futureDate.casesWithSocialDistancing)}></textarea>
+            </Grid>
+            <Grid item xs={6} md={4}>
+                <PredictionItem title={`Deaths in ${futureDateDisplay}  with distancing`} {...futureDate.deathsWithSocialDistancing}{...selectedRegressionModel.deaths.noSocialDistancing}  />
+                
+            </Grid>
+
+            <Grid item xs={6} md={4}>
+                <Card>
+                    <CardContent>
+                        <Typography gutterBottom variant="h5" component="h2">
+                            Population
+                        </Typography>
+                        <Typography variant="h3" color="textPrimary" component="p">
+                        {countries.activeCountry?.population.toLocaleString(undefined, {maximumFractionDigits: 0})} <small>(est.)</small>
+                        </Typography>
+                    </CardContent>
+                </Card>
+            </Grid>
+            <Grid item xs={6} md={4}>
+                <Card>
+                    <CardContent>
+                        <dl>
+                            <dd>{futureDateDisplaySelector}</dd>
+                            
+                            <dd>Current (w/Social distancing) </dd>
+                            <dt>{now.casesWithSocialDistancing.cumulative} (est.)</dt>
+                            
+                            <dd>Deaths</dd>
+                            <dt>{now.deathsWithSocialDistancing.cumulative} (est.)</dt>
+
+                            <dd>Potential</dd>
+                            <dt>{now.deathsWithoutSocialDistancing.cumulative} (est.)</dt>
+
+                            <dd>Population</dd>
+                            <dt>{countries.activeCountry?.population.toLocaleString(undefined, {maximumFractionDigits: 0})} (est.)</dt>
+
+                            {/* <dd>Recovered </dd>
+                            <dt>{recovered.estimatedAsOfNow} (est.)</dt> */}
+
+
+                            <dd>Offical Confirmed</dd>
+                            <dt>{epidemic.officialCumulativeConfirmedCases}</dt>
+                        </dl>
+                    </CardContent>
+                </Card>
+            </Grid>
             <Grid item xs={12}>    
                 <Typography variant="body2" color="textSecondary" component="p">
-                    * Current estimates are calculated using regression with datapoints after social distancing was enacted.
+                    * Current estimates are calculated using polynominal regression using datapoints after social distancing was enacted.
                     <br />
-                    * Potential cases are calculated using regression with datapoints before social distancing was enacted.
+                    * Potential cases are calculated using linear regression using datapoints before social distancing was enacted.
                     <br />
                     * Lives saved assumes a CFR (Case Fatality Rate) of {fatalityRate.toLocaleString()} based on latest confirmed figures.
                 </Typography>

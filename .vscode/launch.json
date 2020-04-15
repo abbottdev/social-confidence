@@ -22,12 +22,25 @@
             "port": 9229
         },
         {
-			"name": "Node Inspector",
+			"name": "UpdateStatistics",
 			"type": "node",
 			"request": "launch",
 			"args": ["${workspaceRoot}/api/functions/update-statistics/src/local.ts"],
 			"runtimeArgs": ["-r", "ts-node/register"],
 			"cwd": "${workspaceRoot}/api/functions/update-statistics/",
+			"protocol": "inspector",
+			"internalConsoleOptions": "openOnSessionStart",
+			"env": {
+				"TS_NODE_IGNORE": "false"
+			}
+		},
+        {
+			"name": "Update DiseaseList",
+			"type": "node",
+			"request": "launch",
+			"args": ["${workspaceRoot}/api/functions/update-diseases/src/local.ts"],
+			"runtimeArgs": ["-r", "ts-node/register"],
+			"cwd": "${workspaceRoot}/api/functions/update-diseases/",
 			"protocol": "inspector",
 			"internalConsoleOptions": "openOnSessionStart",
 			"env": {

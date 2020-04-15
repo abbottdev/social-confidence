@@ -9,8 +9,8 @@ const bucketName = 'covid.abbott.rocks';
     //Use late import to allow the AWS Config credentials to be set.
     const handlerType = await import("./handler");
 
-    let handler = new handlerType.StatisticsHandler(bucketName);
+    let handler = new handlerType.DiseaseListHandler(bucketName);
 
-    await handler.updateGbStatistics();
+    await handler.updateDiseasesForAllCountries();
 
 })();

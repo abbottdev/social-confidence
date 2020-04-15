@@ -1,9 +1,11 @@
 export interface Figures {
-    confirmed?: number
+    cumulative: number
+    change?: number
     reportDate?: string
     confirmedCasesGrowthRatePerMinute?: number | null
-    previousFigures?: {
-        confirmed: number
+    previousFigures?: {  
+        cumulative: number
+        change: number
         reportDate: string
     }[]
 }
