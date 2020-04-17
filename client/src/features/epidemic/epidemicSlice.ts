@@ -5,6 +5,7 @@ import moment, { duration, Moment, Duration } from "moment";
 import { Country } from '../../types/Country';
 import {  Prediction, createInitialCaseModel, predictValueAtTime, PredictionValue } from './epidemicCalculator';
 import { apiBaseUrl } from "../../config/api.json";
+import { useSelector, TypedUseSelectorHook } from 'react-redux';
 
 interface EpidemicState {
     futureDateAsJsonDuration: string
@@ -150,7 +151,7 @@ export const caseFatalityRateSelector = createSelector(
         }
 });
 
-const regressionModelsSelector = createSelector(
+export const regressionModelsSelector = createSelector(
     currentEpidemicData,
     (data) => {
         if (data) {

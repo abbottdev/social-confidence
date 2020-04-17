@@ -13,7 +13,7 @@ const removeToday = false;
 
 type previousFigures = {confirmed: number, reportDate: string}
 
-const exclusionDates: string[] = ['2020-04-13'];
+//const exclusionDates: string[] = ['2020-04-13'];
 
 type valueAsNumber = { value: number };
 type valueAsString = { value: string };
@@ -220,8 +220,8 @@ export class StatisticsHandler  {
                 //         )
                 //     );
 
-                previousConfirmedCases = previousConfirmedCases.filter(c => exclusionDates.some(e => this.momentEqual(e, c.reportDate)) == false);
-                previousConfirmedDeaths = previousConfirmedDeaths.filter(c => exclusionDates.some(e => this.momentEqual(e, c.reportDate)) == false);
+                // previousConfirmedCases = previousConfirmedCases.filter(c => exclusionDates.some(e => this.momentEqual(e, c.reportDate)) == false);
+                // previousConfirmedDeaths = previousConfirmedDeaths.filter(c => exclusionDates.some(e => this.momentEqual(e, c.reportDate)) == false);
 
                 //Get todays figures and substitute for the total cumulative as regions reports vary.
                 

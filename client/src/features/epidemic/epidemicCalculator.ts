@@ -19,6 +19,10 @@ type RegressionWithMethod = regression.Result & {
     regressionMethod: string
 }
 
+const asEpochHours = (m:Moment) : number => {
+    return moment(0).diff(m, "days");
+};
+
 const selectRegressionModelWithBestRSquaredFit = (dataItems:[number, number][], duration: moment.Duration, preferredModel: string) : RegressionWithMethod => {
     const results = [
         { name: "polynomial", result: regression.polynomial(dataItems, {precision: 6}) },
@@ -61,9 +65,10 @@ export const predictValueAtTime = (model: regression.Result, preCalculatedPredic
 
     const existingPrediction = preCalculatedPredictions[index];
     
-    const days = moment(predictionTime).diff(existingPrediction.date, "days", true);
+    //const days = moment(predictionTime).diff(existingPrediction.date, "days", true);
+    const predictionX = asEpochHours(predictionTime);
 
-    const prediction = model.predict(index + days);
+    const prediction = model.predict(predictionX);
     
     let change = prediction[1];
 
@@ -108,7 +113,7 @@ const predictAndBuildRegressionModel = (params: PredictParams) : Prediction & { 
             .map<PredictionValue>(d => 
                 { return { date: moment(d.reportDate).toJSON(), cumulative: d.cumulative, change: d.change, type: "CONFIRMED" }}));
     
-    const dataItems:[number, number][] = regressionInput.map((f, index) => [index + 1, f.change]);
+    const dataItems:[number, number][] = regressionInput.map((f, index) => [asEpochHours(moment(f.reportDate)), f.change]);
 
     let regression:RegressionWithMethod;
 
@@ -119,17 +124,23 @@ const predictAndBuildRegressionModel = (params: PredictParams) : Prediction & { 
     }
     
     result.regressionMethod = regression.regressionMethod;
+
+    if (isNaN(regression.r2)) {
+        debugger;
+    }
     result.rSquared = regression.r2;
     //result.method = reg.method;
 
     const daysSinceLastDataItem = moment(predictionDate!.valueOf()).diff(maxPreviousFigureDate, "days", true);
 
     let sum = regressionInput[regressionInput.length -1].cumulative;
-
+debugger;
     //We need to predict the daily increase for each item - we should probably store these at some point.
     for (let day = 1; day < daysSinceLastDataItem; day++) {
         const dayInterval = day == Math.floor(daysSinceLastDataItem) ? day + (daysSinceLastDataItem % 1) : day;
-        let newItemsForThisDay = regression.predict(dayInterval + dataItems.length)[1];
+
+        let thisPredictionDate = maxPreviousFigureDate.clone().add(dayInterval, "days");
+        let newItemsForThisDay = regression.predict(asEpochHours(thisPredictionDate))[1];
 
         if (newItemsForThisDay < 0) newItemsForThisDay = 0;
 
@@ -138,7 +149,7 @@ const predictAndBuildRegressionModel = (params: PredictParams) : Prediction & { 
         result.values.push({
             change: newItemsForThisDay,
             cumulative: sum, 
-            date: maxPreviousFigureDate.clone().add(dayInterval, "days").toJSON(),
+            date: thisPredictionDate.toJSON(),
             type: "PREDICTION"
         });
     }
@@ -167,27 +178,33 @@ export const createInitialCaseModel = (
     // }
 
     const withSocialDistancing = predictAndBuildRegressionModel({
-        startDate: socialDistancingStartDate.clone(),
+        startDate: socialDistancingStartDate.clone(), //Add disease length as lag factor
         endDate: moment().add(5, "years"),
         predictionDate: maximumDate,
         data: reportedValues,
         preferredModel: "polynomial"
     });
 
-    let noSocialDistancingStartDate = socialDistancingStartDate.clone().subtract(diseaseLength.asMilliseconds(), "milliseconds");
-    let noSocialDistancingEndDate = socialDistancingStartDate.clone();
+    let noSocialDistancingStartDate = socialDistancingStartDate.clone().subtract(2, "weeks");
+    let noSocialDistancingEndDate = socialDistancingStartDate.clone().add(diseaseLength); //Disease length has a lag factor
 
-    if (noSocialDistancingStartDate.isSame(noSocialDistancingEndDate, "date")) {
-        debugger;
-        throw new Error("No time window");
+    if (isDeaths) {
+        noSocialDistancingEndDate = noSocialDistancingEndDate.clone().add(diseaseLength.asMilliseconds() * 2, "milliseconds");
     }
+
+    //let noSocialDistancingEndDate = socialDistancingStartDate.clone();
+
+    // if (noSocialDistancingStartDate.isSame(noSocialDistancingEndDate, "date")) {
+    //     debugger;
+    //     throw new Error("No time window");
+    // }
 
     const noSocialDistancing =  predictAndBuildRegressionModel({
         startDate: noSocialDistancingStartDate,
         endDate: noSocialDistancingEndDate,
         predictionDate: maximumDate,
         data: reportedValues,
-        preferredModel: "polynomial", //current?.withSocialDistancingAsOfNow?.method
+        preferredModel: "" // "polynomial", //current?.withSocialDistancingAsOfNow?.method
     });
 
     return {withSocialDistancing, noSocialDistancing};

@@ -1,6 +1,6 @@
 import React, { FunctionComponent, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
-import { currentEpidemic, currentEpidemicData, figuresSelector, selectedRegressionModelSelector, caseFatalityRateSelector, setFutureDate, futureDateSelector, valuesSelector, futureDateDisplaySelector } from "../../features/epidemic/epidemicSlice";
+import { currentEpidemic, regressionModelsSelector, currentEpidemicData, figuresSelector, selectedRegressionModelSelector, caseFatalityRateSelector, setFutureDate, futureDateSelector, valuesSelector, futureDateDisplaySelector } from "../../features/epidemic/epidemicSlice";
 import { Card, CardContent, Grid, CircularProgress, Typography, Slider, Box, CardHeader, makeStyles, Divider, Paper } from '@material-ui/core';
 import { PredictionItem } from './PredictionItem';
 import { countryListSelector } from '../../features/countries/countryListSlice';
@@ -55,6 +55,7 @@ export const EpidemicViewerDebug:FunctionComponent<{countryCode: string, disease
     const fatalityRate = useSelector(caseFatalityRateSelector);
     const values = useSelector(valuesSelector);
     const cardHeaderStyle = cardHeaderStyles();
+    const regressionModel = useSelector(regressionModelsSelector);
 
     const marks = [
         {
@@ -177,7 +178,7 @@ export const EpidemicViewerDebug:FunctionComponent<{countryCode: string, disease
                     <Divider />
                     <Box display={'flex'} className={cardHeaderStyle.footer}  >
                         <Box p={2} className={cardHeaderStyle.box} >
-                            <Typography color="textSecondary" variant="button">EST. DEATHS NOW</Typography>
+                            <Typography color="textSecondary" variant="button">EST. DEATHS FUTURE</Typography>
                             <Typography variant="h5">{numberFormat(futureDate.deathsWithSocialDistancing.cumulative)}</Typography>
                         </Box>
                         <Box p={2} className={cardHeaderStyle.box}>
@@ -199,7 +200,7 @@ export const EpidemicViewerDebug:FunctionComponent<{countryCode: string, disease
                     <Divider />
                     <Box display={'flex'} className={cardHeaderStyle.footer}  >
                         <Box p={2} flex={'auto'} className={cardHeaderStyle.box} >
-                            <Typography color="textSecondary" variant="button">EST. CASES NOW</Typography>
+                            <Typography color="textSecondary" variant="button">EST. CASES FUTURE</Typography>
                             <Typography variant="h5">{numberFormat(futureDate.casesWithSocialDistancing.cumulative)}</Typography>
                         </Box>
                         <Box p={2} flex={'auto'} className={cardHeaderStyle.box}>
@@ -228,10 +229,11 @@ export const EpidemicViewerDebug:FunctionComponent<{countryCode: string, disease
                 <PredictionItem title="Cases now casesWithSocialDistancing" {...now.casesWithSocialDistancing} {...selectedRegressionModel.cases.withSocialDistancing}  />
                 Cases Prevented to date: {(now.casesWithoutSocialDistancing.cumulative - now.casesWithSocialDistancing.cumulative).toLocaleString(undefined, {minimumFractionDigits: 6})}<br />
                 Potential Cases: {(now.casesWithoutSocialDistancing.cumulative).toLocaleString(undefined, {minimumFractionDigits: 6})}
+                <textarea value={JSON.stringify(regressionModel?.cases.withSocialDistancing)} ></textarea>
             </Grid>
             <Grid item xs={6} md={4}>
                 <PredictionItem title="Deaths withSocialDistancingAsOfNow" {...now.deathsWithSocialDistancing} {...selectedRegressionModel.deaths.withSocialDistancing} />
-                
+                <textarea value={JSON.stringify(regressionModel?.deaths.withSocialDistancing)} ></textarea>
                 Potential Deaths: {(now.deathsWithoutSocialDistancing.cumulative).toLocaleString(undefined, {minimumFractionDigits: 6})}
             </Grid>
             
@@ -242,9 +244,11 @@ export const EpidemicViewerDebug:FunctionComponent<{countryCode: string, disease
             </Grid>
             <Grid item xs={6} md={4}>
                 <PredictionItem title="Cases now" {...now.casesWithoutSocialDistancing} {...selectedRegressionModel.cases.noSocialDistancing} />
+                <textarea value={JSON.stringify(regressionModel?.cases.noSocialDistancing)} ></textarea>
             </Grid>
             <Grid item xs={6} md={4}>
                 <PredictionItem title="Deaths now" {...now.deathsWithoutSocialDistancing} {...selectedRegressionModel.deaths.noSocialDistancing} />
+                <textarea value={JSON.stringify(regressionModel?.deaths.noSocialDistancing)} ></textarea>
             </Grid>
             
             <Grid item xs={12}>    

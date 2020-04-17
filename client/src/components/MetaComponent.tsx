@@ -6,7 +6,6 @@ import MenuIcon from '@material-ui/icons/Menu';
 import ShareImage from "../img/logo256.png";
 import PreviewImage from "../img/preview.png";
 import useMetaTags from 'react-metatags-hook';
-import { websiteBaseAddress } from "../config/api.json";
 
 export const MetaComponent = () => {
     let location = useLocation();
@@ -17,12 +16,10 @@ export const MetaComponent = () => {
         title: "Social Distancing Works!",
         openGraph: {
             title: 'Social Distancing Works',
-            image: websiteBaseAddress + PreviewImage,
             'site_name': 'Social Distancing Works',
             'url': window.location.href
         },
         links: [
-          { rel: 'canonical', href: window.location.href }
         ],
     }, [location]);
     
